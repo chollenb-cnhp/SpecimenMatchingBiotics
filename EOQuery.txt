@@ -1,0 +1,79 @@
+Select distinct EO.EO_ID EO_ID,
+       ELEMENT_GLOBAL.ELEMENT_GLOBAL_ID G_ELMNT_ID,
+       ELEMENT_SUBNATIONAL.ELEMENT_SUBNATIONAL_ID S_ELMNT_ID,
+       ELEMENT_GLOBAL.ELCODE_BCD ELCODE,
+       Gname.SCIENTIFIC_NAME GNAME,
+       Sname.SCIENTIFIC_NAME SNAME,
+       ELEMENT_SUBNATIONAL.S_PRIMARY_COMMON_NAME SCOMNAME,
+       D_EO_TRACK_STATUS.EO_TRACK_STATUS_CD TRACK,
+       D_BASIC_EO_RANK.BASIC_EO_RANK_CD EORANK,
+       ELEMENT_GLOBAL.G_RANK GRANK,
+       ELEMENT_SUBNATIONAL.S_RANK SRANK,
+       ELEMENT_GLOBAL.ROUNDED_G_RANK RND_GRNK,
+       EO.PRECISION_BCD PRECISN,
+       D_EST_REP_ACCURACY.EST_REP_ACCURACY_DESC REP_ACC,
+       EO.FIRST_OBS_DATE FIRSTOBS,
+       EO.LAST_OBS_DATE LASTOBS,
+       D_ID_CONFIRMED.id_confirmed_cd IDENT,
+       case when TAXON_SUBNATIONAL.STATE_INTERPRETED_USESA = 'No Status' then '' else TAXON_SUBNATIONAL.STATE_INTERPRETED_USESA end USESA,
+       delimlist('SELECT agency_name FROM el_subnatl_agency_status WHERE el_subnatl_agency_status.element_subnational_id ='|| element_subnational.element_subnational_id,'/') as FEDSENS,  
+       TRANSLATE(elsens.D_DATA_SENSITIVE_ID, '123', 'YNC') CNHPSENS, 
+       TRANSLATE(eosens.D_DATA_SENSITIVE_ID, '123', 'YNC') DATASENS,
+       BESTSRC_CO.BSOURCE BESTSRC,
+       D_COUNTY.COUNTY_NAME, 
+       translate((case when ELEMENT_GLOBAL.ELCODE_BCD like 'C%' then COMMUNITY_SUBNTL_EXT_CO.AQUATIC_DEPENDENT else TAXON_SUBNTL_EXT_CO_1.AQUATIC_DEPENDENT end), '01', 'NY') AQ_DEP,
+       EO_EXT_CO.EST_NUM_IND Est_NumIndividuals
+       
+from SHAPE,
+     EO,
+     EO_EXT_CO,
+     ELEMENT_SUBNATIONAL,
+     ELEMENT_GLOBAL,
+     ELEMENT_NATIONAL,
+     D_EO_TRACK_STATUS,
+     D_BASIC_EO_RANK,
+     D_DATA_QC_STATUS,
+     D_DATA_SENSITIVE elsens,
+     D_DATA_SENSITIVE eosens,
+     SCIENTIFIC_NAME gname,
+     SCIENTIFIC_NAME sname,
+     EL_SUBNATL_AGENCY_STATUS,
+     BESTSRC_CO, 
+     EO_COUNTY,
+     D_COUNTY,
+EO_REFERENCE, 
+REFERENCE,
+     EO_SITE,
+     TAXON_SUBNATIONAL,
+     D_ENDEMISM,
+     D_ID_CONFIRMED,
+     COMMUNITY_SUBNTL_EXT_CO,
+     TAXON_SUBNTL_EXT_CO_1,
+     D_EST_REP_ACCURACY
+where SHAPE.Deleted_Ind = 'N'
+ and EO.Shape_ID = SHAPE.Shape_ID
+ and EO.EO_ID = EO_EXT_CO.EO_ID (+)
+ and EO.element_subnational_id = ELEMENT_SUBNATIONAL.Element_subnational_id
+ and ELEMENT_SUBNATIONAL.Element_subnational_id = EL_SUBNATL_AGENCY_STATUS.ELEMENT_SUBNATIONAL_ID (+)
+ and ELEMENT_SUBNATIONAL.Element_national_id = ELEMENT_NATIONAL.Element_national_id
+ and ELEMENT_NATIONAL.Element_global_id = ELEMENT_GLOBAL.element_global_id
+ and ELEMENT_GLOBAL.GNAME_ID = gname.SCIENTIFIC_NAME_ID
+ and ELEMENT_SUBNATIONAL.SNAME_ID = sname.SCIENTIFIC_NAME_ID
+ and ELEMENT_SUBNATIONAL.d_eo_track_status_id = D_EO_TRACK_STATUS.d_eo_track_status_id (+)
+ and ELEMENT_SUBNATIONAL.d_data_sensitive_id = elsens.d_data_sensitive_id (+)
+ and EO.d_data_sensitive_id = eosens.d_data_sensitive_id (+)
+ and EO.d_basic_eo_rank_id = d_basic_eo_rank.d_basic_eo_rank_id (+)
+ and EO.d_data_qc_status_id = D_DATA_QC_STATUS.d_data_qc_status_id (+)
+ and ELEMENT_SUBNATIONAL.element_subnational_id = TAXON_SUBNATIONAL.element_subnational_id (+)
+ and EO.shape_ID = Bestsrc_CO.shape_id (+)
+ and ELEMENT_SUBNATIONAL.d_endemism_id = D_ENDEMISM.d_endemism_id (+)
+ and EO.d_id_confirmed_id = D_ID_CONFIRMED.d_id_confirmed_id (+)
+ and ELEMENT_SUBNATIONAL.element_subnational_id = COMMUNITY_SUBNTL_EXT_CO.element_subnational_id (+)
+ and ELEMENT_SUBNATIONAL.element_subnational_id = TAXON_SUBNTL_EXT_CO_1.element_subnational_id (+)
+ and EO.EO_ID = EO_SITE.EO_ID(+)
+and  EO_REFERENCE.EO_ID = EO.EO_ID(+)
+and EO_COUNTY.EO_ID = EO.EO_ID(+)
+and D_COUNTY.D_COUNTY_ID = EO_COUNTY.D_COUNTY_ID(+)
+and  REFERENCE.REFERENCE_ID = EO_REFERENCE.REFERENCE_ID(+)
+and EO.D_EST_REP_ACCURACY_ID = D_EST_REP_ACCURACY.D_EST_REP_ACCURACY_ID(+)
+and GET_MAJORGROUP_WORD(ELEMENT_SUBNATIONAL.ELEMENT_SUBNATIONAL_ID) = 'Vascular Plants'
